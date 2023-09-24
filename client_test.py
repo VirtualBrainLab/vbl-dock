@@ -31,7 +31,7 @@ else:
 
 ## Create some real data
 
-api_url = "http://localhost:5000/upload/dan_bucket/neuron/n1"
+api_url = f'http://localhost:5000/upload/dan_bucket/neuron/n1?auth={hash256("password")}'
 
 # # Define the data to be sent in the PUT request
 data = {
@@ -52,3 +52,15 @@ if response.status_code == 201:
     print(response.text)
 else:
     print("Error:", response.status_code, response.text)
+
+## Get your data back
+
+api_url = f'http://localhost:5000/dan_bucket/neuron/n1?auth={hash256("password")}'
+
+response = requests.get(api_url)
+
+if response.status_code == 201:
+    print(response.text)
+else:
+    print("Error:", response.status_code, response.text)
+

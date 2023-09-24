@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
 import os
-import hashlib
 import json
 
 app = Flask(__name__)
+# app.config['PREFERRED_URL_SCHEME'] = 'https'
 
 # Define the path where data will be stored
 DATA_DIR = "./data"
@@ -56,7 +56,7 @@ def upload_file(bucket, type, name):
         if "password" not in data or "data" not in data:
             return jsonify({"error": "Incomplete request data"}), 400
 
-        # Validate the token (replace with your own token validation logic)
+        # Validate the user's password
         if not is_valid_password(bucket, data["password"]):
             return jsonify({"error": "Invalid password"}), 401
 
@@ -76,9 +76,23 @@ def upload_file(bucket, type, name):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/<bucket_name>/<type_name>/<filename>' , methods=['GET'])
-def get_data():
-    pass
+@app.route('/<bucket>/<type>/<name>' , methods=['GET'])
+def get_data(bucket, type, name):
+    try:
+        # Check the password
+        password = request.args.get('auth')
+
+        if not is_valid_password(bucket, password):
+            return jsonify({"error": "Invalid password"}), 401
+
+        file_name = os.path.join(DATA_DIR, bucket, type, f'{name}.json')
+        with open(file_name, 'r') as file:
+            data = json.load(file)
+
+        return data, 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 def is_valid_token(token):
