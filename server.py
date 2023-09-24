@@ -93,6 +93,27 @@ def get_data(bucket, type, name):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/<bucket>/all', methods=['GET'])
+def get_all_data(bucket):
+    try:
+        password = request.args.get('auth')
+
+        if not is_valid_password(bucket, password):
+            return jsonify({"error": "Invalid password"}), 401
+
+        # Construct the full path to the bucket directory
+        bucket_path = os.path.join(DATA_DIR, bucket)
+
+        # Compile all JSON data together and return
+        
+        # # List all JSON files in the bucket directory
+        # json_files = [f for f in os.listdir(bucket_path) if f.endswith('.json')]
+
+        # return jsonify({"files": json_files}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 def is_valid_token(token):

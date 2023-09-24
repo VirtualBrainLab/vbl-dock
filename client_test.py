@@ -35,7 +35,6 @@ api_url = f'http://localhost:5000/upload/dan_bucket/neuron/n1?auth={hash256("pas
 
 # # Define the data to be sent in the PUT request
 data = {
-    "password": hash256("password"),  # Replace with a hashed password
     "data": {
         "position": [1,2,3]
     }
