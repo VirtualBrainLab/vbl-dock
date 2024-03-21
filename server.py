@@ -24,14 +24,10 @@ def before_request():
 def create_bucket(bucket):
     try:
         
-        data = request.get_json()
-
-        # Check if the request includes the necessary fields
-        if "token" not in data or "password" not in data:
-            return jsonify({"error": "Incomplete request data"}), 400
+        bucket_data = BucketModel(**request.get_json())
 
         # Validate the token against the tokens.txt file
-        if not is_valid_token(data["token"]):
+        if not is_valid_token(bucket_data.token):
             return jsonify({"error": "Invalid token"}), 401
 
         # Create the user's bucket directory if it doesn't exist
@@ -41,7 +37,7 @@ def create_bucket(bucket):
         # Save the user's password in a file within the bucket
         password_file = os.path.join(user_bucket_dir, "password.txt")
         with open(password_file, 'w') as file:
-            file.write(data["password"])
+            file.write(bucket_data.password)
 
         return jsonify({"message": "Bucket created successfully"}), 201
 
@@ -52,14 +48,10 @@ def create_bucket(bucket):
 def upload_file(bucket, type, name):
     try:
         # Get the request data
-        data = request.get_json()
-
-        # Check if the request includes the necessary fields
-        if "password" not in data or "data" not in data:
-            return jsonify({"error": "Incomplete request data"}), 400
+        data = UploadModel(**request.get_json())
 
         # Validate the user's password
-        if not is_valid_password(bucket, data["password"]):
+        if not is_valid_password(bucket, data.password):
             return jsonify({"error": "Invalid password"}), 401
 
         # Create the directory structure if it doesn't exist
@@ -71,7 +63,7 @@ def upload_file(bucket, type, name):
 
         # Store the JSON data on the server
         with open(file_name, 'w') as file:
-            json.dump(data["data"], file)
+            json.dump(data.data, file)
 
         return jsonify({"message": "File uploaded successfully"}), 201
 
