@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import os
 import json
+from vbl_aquarium.models.dock import *
 
 app = Flask(__name__)
 # app.config['PREFERRED_URL_SCHEME'] = 'https'
@@ -22,6 +23,7 @@ def before_request():
 @app.route('/create/<bucket>', methods=['POST'])
 def create_bucket(bucket):
     try:
+        
         data = request.get_json()
 
         # Check if the request includes the necessary fields
