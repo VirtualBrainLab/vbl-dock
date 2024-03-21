@@ -29,13 +29,18 @@ def create_bucket(bucket):
         # Validate the token against the tokens.txt file
         if not is_valid_token(bucket_data.token):
             return jsonify({"error": "Invalid token"}), 401
+        
 
         # Create the user's bucket directory if it doesn't exist
         user_bucket_dir = os.path.join(DATA_DIR, bucket)
+        password_file = os.path.join(user_bucket_dir, "password.txt")
+
+        if os.path.exists(user_bucket_dir) and os.path.exists(password_file):
+            return jsonify({"error": "Bucket already exists"})  
+        
         os.makedirs(user_bucket_dir, exist_ok=True)
 
         # Save the user's password in a file within the bucket
-        password_file = os.path.join(user_bucket_dir, "password.txt")
         with open(password_file, 'w') as file:
             file.write(bucket_data.password)
 
