@@ -21,7 +21,7 @@ data = BucketModel(
 
 print(hash256("password"))
 
-response = requests.post(api_url, data=data.model_dump_json(), headers=headers)
+response = requests.post(api_url, data=data.to_string(), headers=headers)
 
 # Check the response
 if response.status_code == 201:
@@ -29,37 +29,40 @@ if response.status_code == 201:
 else:
     print("Error:", response.status_code, response.text)
 
-# ## Create some real data
+## Create some real data
 
-# api_url = f'http://localhost:5000/upload/dan_bucket/neuron/n1?auth={hash256("password")}'
+api_url = f'http://localhost:5000/upload/dan_bucket/neuron/n1'
 
-# # # Define the data to be sent in the PUT request
-# data = {
-#     "data": {
-#         "position": [1,2,3]
-#     }
-# }
+# # Define the data to be sent in the PUT request
+data = UploadModel(
+    data="{"position": [1,2,3]}",
+    password=hash256("password")
+)
 
-# # # Convert the data to a JSON string
-# json_data = json.dumps(data)
+# # Convert the data to a JSON string
+json_data = json.dumps(data)
 
-# # # Send the PUT request
-# response = requests.put(api_url, data=json_data, headers=headers)
+# # Send the PUT request
+response = requests.put(api_url, data=data.to_string(), headers=headers)
 
-# # Check the response
-# if response.status_code == 201:
-#     print(response.text)
-# else:
-#     print("Error:", response.status_code, response.text)
+# Check the response
+if response.status_code == 201:
+    print(response.text)
+else:
+    print("Error:", response.status_code, response.text)
 
-# ## Get your data back
+## Get your data back
 
-# api_url = f'http://localhost:5000/dan_bucket/neuron/n1?auth={hash256("password")}'
+api_url = f'http://localhost:5000/dan_bucket/neuron/n1'
 
-# response = requests.get(api_url)
+data = DownloadModel(
+    password=hash256("password")
+)
 
-# if response.status_code == 201:
-#     print(response.text)
-# else:
-#     print("Error:", response.status_code, response.text)
+response = requests.get(api_url, data=data.to_string(), headers=headers)
+
+if response.status_code == 201:
+    print(response.text)
+else:
+    print("Error:", response.status_code, response.text)
 
