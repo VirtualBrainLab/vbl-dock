@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os
 import json
-from vbl_aquarium.models.dock import *
+from vbl_aquarium.models.dock import BucketRequest, UploadRequest, LoadModel
 
 app = Flask(__name__)
 # app.config['PREFERRED_URL_SCHEME'] = 'https'
@@ -24,7 +24,7 @@ def before_request():
 def create_bucket(bucket):
     try:
         
-        bucket_data = BucketModel(**request.get_json())
+        bucket_data = BucketRequest(**request.get_json())
 
         # Validate the token against the tokens.txt file
         if not is_valid_token(bucket_data.token):
@@ -36,7 +36,7 @@ def create_bucket(bucket):
         password_file = os.path.join(user_bucket_dir, "password.txt")
 
         if os.path.exists(user_bucket_dir) and os.path.exists(password_file):
-            return jsonify({"error": "Bucket already exists"})  
+            return jsonify({"error": "Bucket already exists"}), 409  
         
         os.makedirs(user_bucket_dir, exist_ok=True)
 
@@ -49,26 +49,27 @@ def create_bucket(bucket):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/upload/<bucket>/<type>/<name>', methods=['POST','PUT'])
-def upload_file(bucket, type, name):
+@app.route('/upload/<bucket>', methods=['POST','PUT'])
+def upload_file(bucket):
     try:
         # Get the request data
-        data = UploadModel(**request.get_json())
+        data = UploadRequest(**request.get_json())
+
+        print(data.to_string())
 
         # Validate the user's password
         if not is_valid_password(bucket, data.password):
             return jsonify({"error": "Invalid password"}), 401
 
         # Create the directory structure if it doesn't exist
-        file_path = os.path.join(DATA_DIR, bucket, type)
-        os.makedirs(file_path, exist_ok=True)
+        bucket_path = os.path.join(DATA_DIR, bucket)
 
         # Define the file name based on the "name" field
-        file_name = os.path.join(file_path, f"{name}.json")
+        file_name = os.path.join(bucket_path, f"{data.type}.json")
 
         # Store the JSON data on the server
         with open(file_name, 'w') as file:
-            json.dump(data.data, file)
+            file.write(data.data)
 
         return jsonify({"message": "File uploaded successfully"}), 201
 
@@ -104,12 +105,26 @@ def get_all_data(bucket):
         # Construct the full path to the bucket directory
         bucket_path = os.path.join(DATA_DIR, bucket)
 
-        # Compile all JSON data together and return
-        
-        # # List all JSON files in the bucket directory
-        # json_files = [f for f in os.listdir(bucket_path) if f.endswith('.json')]
+        files = os.listdir(bucket_path)
 
-        # return jsonify({"files": json_files}), 200
+        types = []
+        datas = []
+        for file in files:
+            if (file.endswith('.json')):
+                type = file.split('.')[0]
+                with open(os.path.join(bucket_path, file), 'r') as file:
+                    raw = file.read()
+                
+                types.append(type)
+                datas.append(raw)
+
+        # Compile all JSON data together and return
+        data = LoadModel(
+            types=types,
+            data=datas
+        )
+        
+        return data.to_string(), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
