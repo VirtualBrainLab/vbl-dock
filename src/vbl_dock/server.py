@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os
 import json
-from vbl_aquarium.models.dock import BucketRequest, UploadRequest, LoadModel
+from vbl_aquarium.models.dock import BucketRequest, UploadRequest, LoadRequest, LoadModel
 
 app = Flask(__name__)
 # app.config['PREFERRED_URL_SCHEME'] = 'https'
@@ -75,31 +75,13 @@ def upload_file(bucket):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@app.route('/<bucket>/<type>/<name>' , methods=['GET'])
-def get_data(bucket, type, name):
-    try:
-        # Check the password
-        password = request.args.get('auth')
-
-        if not is_valid_password(bucket, password):
-            return jsonify({"error": "Invalid password"}), 401
-
-        file_name = os.path.join(DATA_DIR, bucket, type, f'{name}.json')
-        with open(file_name, 'r') as file:
-            data = json.load(file)
-
-        return data, 201
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
     
 @app.route('/<bucket>/all', methods=['GET'])
 def get_all_data(bucket):
     try:
-        password = request.args.get('auth')
+        data = LoadRequest(**request.get_json())
 
-        if not is_valid_password(bucket, password):
+        if not is_valid_password(bucket, data.password):
             return jsonify({"error": "Invalid password"}), 401
 
         # Construct the full path to the bucket directory
@@ -111,6 +93,7 @@ def get_all_data(bucket):
         datas = []
         for file in files:
             if (file.endswith('.json')):
+                print(f'Adding data from {file}')
                 type = file.split('.')[0]
                 with open(os.path.join(bucket_path, file), 'r') as file:
                     raw = file.read()
@@ -123,10 +106,11 @@ def get_all_data(bucket):
             types=types,
             data=datas
         )
-        
-        return data.to_string(), 200
+
+        return data.to_string(), 201
 
     except Exception as e:
+        print(e)
         return jsonify({"error": str(e)}), 500
 
 
